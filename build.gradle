@@ -22,7 +22,7 @@ repositories {
         url "http://artifactory.swedbank.net:8081/artifactory/p950xxv_local/"
     }
 }
-def isRelease = false
+
 release {
     // add a second strategy to create release candidates from 'rc/.*' branches
     versionStrategy semanticRelease.releaseStrategy.copyWith(
@@ -34,7 +34,6 @@ release {
             },
             preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy, Strategies.PreRelease.COUNT_INCREMENTED)
     )
-    isRelease = true
 }
 semanticRelease {
     repo {
@@ -45,7 +44,7 @@ artifactory {
     contextUrl = 'http://artifactory.swedbank.net:8081/artifactory'
     publish {
         repository {
-            repoKey = "lib-snapshot-local"
+            repoKey = "p950xxv-local"
             username = "admin"
             password = "password"
             ivy{
@@ -71,7 +70,6 @@ publishing {
     }
 }
 
-artifactoryPublish.onlyIf{isRelease == true}
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
