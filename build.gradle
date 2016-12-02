@@ -39,9 +39,7 @@ release {
                     isRelease ? Strategies.PreRelease.COUNT_INCREMENTED:Strategies.PreRelease.STAGE_FIXED)
     )
 }
-semanticRelease {
-    
-}
+
 println "Current tag: " + grgit.tag.list()[grgit.tag.list().size() - 1].getName()
 artifactory {
     contextUrl = 'http://artifactory.swedbank.net:8081/artifactory'
