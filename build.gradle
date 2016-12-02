@@ -25,7 +25,7 @@ release {
             // the type is important, without type you would again replace the default strategy
             type: 'rc',
             selector: { SemVerStrategyState state ->
-                println "That is ChangeScope: " + state.scopeFromProp
+                println "That is ChangeScope here: " + state.scopeFromProp
                 !state.repoDirty && state.currentBranch.name ==~ /integration.*/ &&
                         semanticRelease.semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
             },
