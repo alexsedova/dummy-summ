@@ -17,10 +17,6 @@ apply plugin: 'ivy-publish'
 repositories {
     mavenCentral()
     jcenter()
-    ivy {
-        // for custom built gradle-jenkins-plugin:1.3.3 with fix for jenkins job dsl
-        url "http://artifactory.swedbank.net:8081/artifactory/p950xxv_local/"
-    }
 }
 
 release {
@@ -44,7 +40,7 @@ artifactory {
     contextUrl = 'http://artifactory.swedbank.net:8081/artifactory'
     publish {
         repository {
-            repoKey = "p950xxv-local"
+            repoKey = "p950pce_Gradle_local"
             username = "admin"
             password = "password"
             ivy{
@@ -59,10 +55,13 @@ artifactory {
     }
 }
 
+def branchName = "${grgit.branch.current.name}"
+def suffix = (branchName == "integration" || branchName == "master")? "": "-dev.${grgit.head().abbreviatedId}"
+
 publishing {
     publications {
         ivyJava(IvyPublication) {
-            revision = grgit.tag.list()[grgit.tag.list().size() - 1].getName()
+            revision = grgit.tag.list()[grgit.tag.list().size() - 1].getName() + suffix
             organisation = "se.swedbank"
             module = rootProject.name
             from components.java
