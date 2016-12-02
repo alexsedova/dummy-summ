@@ -40,11 +40,7 @@ release {
     )
 }
 semanticRelease {
-    changeLog {
-        changeScope = {}
-    }
-    repo {
-    }
+    
 }
 println "Current tag: " + grgit.tag.list()[grgit.tag.list().size() - 1].getName()
 artifactory {
