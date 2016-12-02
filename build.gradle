@@ -21,13 +21,15 @@ repositories {
 
 release {
     // add a second strategy to create release candidates from 'rc/.*' branches
-    println "This is semantic release change log: " + semanticRelease.getChangeLogService().changeScope 
+    //println "This is semantic release change log: " + semanticRelease.changeLog
     versionStrategy semanticRelease.releaseStrategy.copyWith(
             // the type is important, without type you would again replace the default strategy
             type: 'rc',
             selector: { SemVerStrategyState state ->
-                println "That is ChangeScope here: " + state.scopeFromProp
-                println "That is the Stage from Props: " + state.stageFromProp
+                println "This is a state: " + state.getClass()
+                println "Nearest version: " + state.nearestVersion.toString()
+                println "Can release: " + semanticRelease.semanticStrategy.canRelease(state)
+
                 !state.repoDirty && state.currentBranch.name ==~ /integration.*/ &&
                         semanticRelease.semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
             },
@@ -35,6 +37,9 @@ release {
     )
 }
 semanticRelease {
+    changeLog {
+        changeScope = {}
+    }
     repo {
     }
 }
