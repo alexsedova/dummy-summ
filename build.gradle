@@ -21,7 +21,7 @@ repositories {
 
 release {
     // add a second strategy to create release candidates from 'rc/.*' branches
-    def isRelease = false
+    def rel = false
     //println "This is semantic release change log: " + semanticRelease.changeLog
     versionStrategy semanticRelease.releaseStrategy.copyWith(
             // the type is important, without type you would again replace the default strategy
@@ -30,13 +30,13 @@ release {
                 println "This is a state: " + state.getClass()
                 println "Nearest version: " + state.nearestVersion.toString()
                 println "Can release: " + semanticRelease.semanticStrategy.canRelease(state)
-                isRelease = semanticRelease.semanticStrategy.canRelease(state)
-                println "Is release? : " + isRelease
+                rel = semanticRelease.semanticStrategy.canRelease(state)
+                println "Is release? : " + rel
                 !state.repoDirty && state.currentBranch.name ==~ /integration.*/ &&
-                        isRelease && project.gradle.startParameter.taskNames.find { it == 'release' }
+                        rel && project.gradle.startParameter.taskNames.find { it == 'release' }
             },
             preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy,
-                    Strategies.PreRelease.STAGE_FLOAT, Strategies.PreRelease.COUNT_INCREMENTED)
+                    Strategies.PreRelease.COUNT_INCREMENTED)
     )
 }
 semanticRelease {
