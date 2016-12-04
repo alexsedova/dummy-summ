@@ -29,54 +29,19 @@ semanticRelease {
     }
 }
 
-def PartialSemVerStrategy mySuperStategy = { state ->
-    def nearest = state.nearestVersion
-    def currentPreIdents = state.inferredPreRelease ? state.inferredPreRelease.split('\\.') as List : []
-    if (nearest.any == nearest.normal || nearest.any.normalVersion != state.inferredNormal) {
-        currentPreIdents << '1'
-    } else {
-        def nearestPreIdents = nearest.any.preReleaseVersion.split('\\.')
-        if (nearestPreIdents.size() <= currentPreIdents.size()) {
-            currentPreIdents << '1'
-        } else if (currentPreIdents == nearestPreIdents[0..(currentPreIdents.size() - 1)]) {
-            def count = parseIntOrZero(nearestPreIdents[currentPreIdents.size()])
-
-            // We want to increment RC only if there are relevant changes since the last rc.
-            // If we eg accidently call gradle release we don't want to apply the tag just to nothing
-            SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, repo, TagStrategy())
-            List<Commit> log = changeLogService.commits(nearest.any)
-            ChangeScope scope = changeLogService.changeScope(log)
-            if(!scope){
-                currentPreIdents << Integer.toString(count)
-            }
-            currentPreIdents << Integer.toString(count + 1)
-
-        } else {
-            currentPreIdents << '1'
-        }
-    }
-    println "inferredPreRelease form mystr: " + currentPreIdents
-    return state.copyWith(inferredPreRelease: currentPreIdents.join('.'))
-}
-
 release {
-    // add a second strategy to create release candidates from 'rc/.*' branches
-    def rel = false
-    //println "This is semantic release change log: " + semanticRelease.changeLog
     versionStrategy semanticRelease.releaseStrategy.copyWith(
             // the type is important, without type you would again replace the default strategy
             type: 'rc',
             selector: { SemVerStrategyState state ->
-                println "This is a state: " + state.getClass()
-                println "Nearest version: " + state.nearestVersion.toString()
-                println "Can release: " + semanticRelease.semanticStrategy.canRelease(state)
-                rel = semanticRelease.semanticStrategy.canRelease(state)
-                println "Is release? : " + rel
-                !state.repoDirty && state.currentBranch.name ==~ /integration.*/ &&
-                        rel && project.gradle.startParameter.taskNames.find { it == 'release' }
+                state.currentBranch.name ==~ /integration.*/ &&
+                        semanticRelease.semanticStrategy.canRelease(state) &&
+                        state.nearestVersion.distanceFromAny &&
+                        !state.isRepoDirty() &&
+                        project.gradle.startParameter.taskNames.find { it == 'release' }
             },
             preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy,
-                    mySuperStategy)
+                    Strategies.PreRelease.COUNT_INCREMENTED)
     )
 }
 
