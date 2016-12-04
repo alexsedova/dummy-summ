@@ -19,7 +19,9 @@ repositories {
     jcenter()
 }
 
-def PartialSemVerStrategy mySuperStategy = closure { state ->
+import static org.ajoberstar.gradle.git.release.semver.StrategyUtil.*
+
+def PartialSemVerStrategy mySuperStategy = { state ->
     def nearest = state.nearestVersion
     def currentPreIdents = state.inferredPreRelease ? state.inferredPreRelease.split('\\.') as List : []
     if (nearest.any == nearest.normal || nearest.any.normalVersion != state.inferredNormal) {
