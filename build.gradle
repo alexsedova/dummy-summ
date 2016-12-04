@@ -36,7 +36,7 @@ release {
                         isRelease && project.gradle.startParameter.taskNames.find { it == 'release' }
             },
             preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy,
-                    isRelease ? Strategies.PreRelease.COUNT_INCREMENTED:Strategies.PreRelease.STAGE_FLOAT)
+                    Strategies.PreRelease.COUNT_INCREMENTED)
     )
 }
 semanticRelease {
