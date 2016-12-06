@@ -4,36 +4,80 @@ import org.ajoberstar.gradle.git.release.opinion.Strategies
 plugins {
     id 'java'
     id 'de.gliderpilot.semantic-release' version '1.2.0'
+    id 'com.jfrog.artifactory' version '4.4.0'
+    id 'org.ajoberstar.grgit' version '1.5.1'
     id 'maven'
 }
 
 group 'com.praqma'
 
 apply plugin: 'java'
+apply plugin: 'ivy-publish'
 
 repositories {
     mavenCentral()
     jcenter()
 }
 
+import static org.ajoberstar.gradle.git.release.semver.StrategyUtil.*
+import org.ajoberstar.gradle.git.release.semver.*
+import org.ajoberstar.grgit.Commit
+import de.gliderpilot.gradle.semanticrelease.*
+
+semanticRelease {
+    repo{
+    }
+}
+
 release {
-    // add a second strategy to create release candidates from 'rc/.*' branches
     versionStrategy semanticRelease.releaseStrategy.copyWith(
             // the type is important, without type you would again replace the default strategy
             type: 'rc',
             selector: { SemVerStrategyState state ->
-                !state.repoDirty && state.currentBranch.name ==~ /integration.*/ &&
-                        semanticRelease.semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
+                state.currentBranch.name ==~ /integration.*/ &&
+                        semanticRelease.semanticStrategy.canRelease(state) &&
+                        state.nearestVersion.distanceFromAny &&
+                        !state.isRepoDirty() &&
+                        project.gradle.startParameter.taskNames.find { it == 'release' }
             },
-            preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy, Strategies.PreRelease.COUNT_INCREMENTED)
+            preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy,
+                    Strategies.PreRelease.COUNT_INCREMENTED)
     )
-
 }
-semanticRelease {
-    repo {
+
+println "Current tag: " + grgit.tag.list()[grgit.tag.list().size() - 1].getName()
+artifactory {
+    contextUrl = 'http://artifactory.swedbank.net:8081/artifactory'
+    publish {
+        repository {
+            repoKey = "p950pce_Gradle_local"
+            username = "admin"
+            password = "password"
+            ivy{
+                mavenCompatible = false
+            }
+        }
+        defaults {
+            publications('ivyJava')
+            // building in artifactory defaults to true but doesn't seem like very useful info?
+            publishBuildInfo = false
+        }
     }
 }
 
+def branchName = "${grgit.branch.current.name}"
+def suffix = (branchName == "integration" || branchName == "master")? "": "-dev.${grgit.head().abbreviatedId}"
+
+publishing {
+    publications {
+        ivyJava(IvyPublication) {
+            revision = grgit.tag.list()[grgit.tag.list().size() - 1].getName() + suffix
+            organisation = "se.swedbank"
+            module = rootProject.name
+            from components.java
+        }
+    }
+}
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
