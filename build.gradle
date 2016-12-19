@@ -25,6 +25,11 @@ import org.ajoberstar.grgit.Commit
 import de.gliderpilot.gradle.semanticrelease.*
 
 semanticRelease {
+    changeLog{
+        changeScope = { org.ajoberstar.grgit.Commit commit ->
+            println "Result: " + it
+        }
+    }
     repo{
     }
 }
@@ -45,7 +50,6 @@ release {
     )
 }
 
-println "Current tag: " + grgit.tag.list()[grgit.tag.list().size() - 1].getName()
 artifactory {
     contextUrl = 'http://artifactory.swedbank.net:8081/artifactory'
     publish {
@@ -71,7 +75,6 @@ def suffix = (branchName == "integration" || branchName == "master")? "": "-dev.
 publishing {
     publications {
         ivyJava(IvyPublication) {
-            revision = grgit.tag.list()[grgit.tag.list().size() - 1].getName() + suffix
             organisation = "se.swedbank"
             module = rootProject.name
             from components.java
