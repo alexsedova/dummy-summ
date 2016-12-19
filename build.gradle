@@ -3,9 +3,9 @@ import org.ajoberstar.gradle.git.release.opinion.Strategies
 
 plugins {
     id 'java'
+    id 'org.ajoberstar.grgit' version '1.5.1'
     id 'de.gliderpilot.semantic-release' version '1.2.0'
     id 'com.jfrog.artifactory' version '4.4.0'
-    id 'org.ajoberstar.grgit' version '1.5.1'
     id 'maven'
 }
 
